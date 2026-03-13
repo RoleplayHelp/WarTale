@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700&display=swap');
 
 :root {
     /* Bảng màu Neon Sci-Fi */
@@ -44,8 +44,9 @@ body {
     background: radial-gradient(circle at top left, #1a1a2e, var(--bg-color) 70%);
     background-attachment: fixed;
     color: var(--text-main);
-    font-family: 'Rajdhani', sans-serif; /* Font chuẩn Game */
-    font-size: 18px;
+    /* Đổi sang font Exo 2 - Hỗ trợ Tiếng Việt cực mượt, chuẩn form Game */
+    font-family: 'Exo 2', sans-serif; 
+    font-size: 16px;
     line-height: 1.6;
     min-height: 100vh;
 }
@@ -65,10 +66,10 @@ header {
 }
 
 header h1 {
-    font-size: 3rem;
+    font-size: 2.8rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     background: linear-gradient(90deg, var(--secondary), var(--accent));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -78,8 +79,8 @@ header h1 {
 
 header p {
     color: var(--secondary);
-    font-size: 1.2rem;
-    letter-spacing: 1px;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
 }
 
 .grid-layout {
@@ -105,7 +106,8 @@ header p {
 }
 
 h2 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
+    font-weight: 600;
     margin-bottom: 1.5rem;
     color: var(--text-main);
     border-bottom: 2px solid transparent;
@@ -130,7 +132,7 @@ h2 {
 }
 
 .form-group label {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
     color: var(--secondary);
@@ -144,7 +146,7 @@ input, select {
     border-radius: 8px;
     font-size: 1.1rem;
     font-family: inherit;
-    font-weight: 600;
+    font-weight: 500;
     transition: all 0.3s ease;
     width: 100%;
 }
@@ -173,7 +175,7 @@ input[type=number] {
 
 .error-msg {
     color: var(--error);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 500;
     margin-top: 0.4rem;
     min-height: 1.2rem;
@@ -214,18 +216,18 @@ input[type=number] {
 }
 
 .status-card h3 {
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: 700;
     margin-bottom: 0.2rem;
     color: var(--secondary);
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
 }
 
 .highlight {
     color: var(--accent);
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
 }
 
 /* Stat Summary (Base & Remaining) */
@@ -253,15 +255,15 @@ input[type=number] {
 
 .summary-box span {
     display: block;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
     margin-bottom: 0.3rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 }
 
 .summary-box strong {
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: 700;
 }
 
@@ -304,12 +306,13 @@ input[type=number] {
 }
 
 .stat-row span {
-    font-weight: 600;
+    font-weight: 500;
     color: var(--text-muted);
 }
 
 .stat-row strong {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
+    font-weight: 600;
     color: var(--text-main);
 }
 
@@ -339,13 +342,13 @@ input[type=number] {
 .combat-list li strong {
     color: var(--accent);
     margin-bottom: 0.3rem;
-    font-size: 1rem;
+    font-size: 0.95rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .combat-list li span {
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: var(--secondary);
     text-shadow: 0 0 5px var(--secondary-glow);
@@ -363,7 +366,7 @@ input[type=number] {
     padding: 1rem;
     border: none;
     border-radius: 8px;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-family: inherit;
     font-weight: 700;
     text-transform: uppercase;
