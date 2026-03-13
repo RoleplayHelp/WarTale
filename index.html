@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Stat Builder</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Character Stat Builder</h1>
+            <p>Công cụ hỗ trợ bạn xây dựng chỉ số</p>
+        </header>
+
+        <main class="grid-layout">
+            <section class="panel input-panel">
+                <h2>Cài đặt cơ bản</h2>
+                <div class="form-group">
+                    <label for="charClass">Class nhân vật:</label>
+                    <select id="charClass"></select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="baseStat">Base Stat (Tổng điểm):</label>
+                    <input type="number" id="baseStat" value="300" min="0">
+                </div>
+
+                <div class="divider"></div>
+
+                <h2>Main Stats (Bắt buộc)</h2>
+                <div class="form-group">
+                    <label for="stat-hp" id="label-hp">HP (Min 20%):</label>
+                    <input type="number" id="stat-hp" class="stat-input" data-stat="hp">
+                    <small class="error-msg" id="err-hp"></small>
+                </div>
+                <div class="form-group">
+                    <label for="stat-spd" id="label-spd">SPD (Min 10%):</label>
+                    <input type="number" id="stat-spd" class="stat-input" data-stat="spd">
+                    <small class="error-msg" id="err-spd"></small>
+                </div>
+                <div class="form-group">
+                    <label for="stat-ref" id="label-ref">REF (Min 10%):</label>
+                    <input type="number" id="stat-ref" class="stat-input" data-stat="ref">
+                    <small class="error-msg" id="err-ref"></small>
+                </div>
+
+                <div class="divider"></div>
+
+                <h2>Sub Stats (Tự do)</h2>
+                <div class="sub-stats-grid">
+                    <div class="form-group">
+                        <label for="stat-atk">ATK:</label>
+                        <input type="number" id="stat-atk" class="stat-input" data-stat="atk">
+                    </div>
+                    <div class="form-group">
+                        <label for="stat-def">DEF:</label>
+                        <input type="number" id="stat-def" class="stat-input" data-stat="def">
+                    </div>
+                    <div class="form-group">
+                        <label for="stat-fort">FORT:</label>
+                        <input type="number" id="stat-fort" class="stat-input" data-stat="fort">
+                    </div>
+                    <div class="form-group">
+                        <label for="stat-ifl">IFL:</label>
+                        <input type="number" id="stat-ifl" class="stat-input" data-stat="ifl">
+                    </div>
+                    <div class="form-group">
+                        <label for="stat-ast">AST:</label>
+                        <input type="number" id="stat-ast" class="stat-input" data-stat="ast">
+                    </div>
+                    <div class="form-group">
+                        <label for="stat-man">MAN:</label>
+                        <input type="number" id="stat-man" class="stat-input" data-stat="man">
+                    </div>
+                    <div class="form-group">
+                        <label for="stat-vit">VIT:</label>
+                        <input type="number" id="stat-vit" class="stat-input" data-stat="vit">
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel result-panel">
+                <h2>Kết quả Build</h2>
+                
+                <div class="status-card">
+                    <h3 id="res-class-name">Attacker</h3>
+                    <p class="highlight" id="res-priority">Ưu tiên: Atk</p>
+                </div>
+
+                <div class="stat-summary">
+                    <div class="summary-box">
+                        <span>Base Stat</span>
+                        <strong id="res-base">300</strong>
+                    </div>
+                    <div class="summary-box highlight-box" id="remaining-box">
+                        <span>Remaining Stat</span>
+                        <strong id="res-remaining">0</strong>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="final-stats">
+                    <div class="stat-row"><span>HP:</span> <strong id="out-hp">0</strong></div>
+                    <div class="stat-row"><span>SPD:</span> <strong id="out-spd">0</strong></div>
+                    <div class="stat-row"><span>REF:</span> <strong id="out-ref">0</strong></div>
+                    <div class="stat-row"><span>ATK:</span> <strong id="out-atk">0</strong></div>
+                    <div class="stat-row"><span>DEF:</span> <strong id="out-def">0</strong></div>
+                    <div class="stat-row"><span>FORT:</span> <strong id="out-fort">0</strong></div>
+                    <div class="stat-row"><span>IFL:</span> <strong id="out-ifl">0</strong></div>
+                    <div class="stat-row"><span>AST:</span> <strong id="out-ast">0</strong></div>
+                    <div class="stat-row"><span>MAN:</span> <strong id="out-man">0</strong></div>
+                    <div class="stat-row"><span>VIT:</span> <strong id="out-vit">0</strong></div>
+                </div>
+
+                <div class="divider"></div>
+                
+                <h2>Thông tin Chiến đấu</h2>
+                <div id="combat-info">
+                    </div>
+
+                <div class="action-buttons">
+                    <button id="btn-copy" class="btn btn-primary">📋 Copy Kết Quả</button>
+                    <button id="btn-clear" class="btn btn-danger">🗑️ Làm mới</button>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
