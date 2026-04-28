@@ -4,23 +4,176 @@ class StorageService {
     load() { const data = localStorage.getItem(this.storageKey); return data ? JSON.parse(data) : null; }
 }
 
-const CharacterClasses = {
-    attacker: { id: 'attacker', name: 'Attacker', priority: 'Ưu tiên: ATK' },
-    tanker: { id: 'tanker', name: 'Tanker', priority: 'Ưu tiên: HP / DEF / FORT' },
-    supporter: { id: 'supporter', name: 'Supporter', priority: 'Ưu tiên: AST' },
-    debuffer: { id: 'debuffer', name: 'Debuffer', priority: 'Ưu tiên: AST' },
-    healer: { id: 'healer', name: 'Healer', priority: 'Ưu tiên: VIT' },
-    scouter: { id: 'scouter', name: 'Scouter', priority: 'Ưu tiên: IFL' }
+// ==========================================
+// HỆ THỐNG CLASS & ĐA HÌNH (POLYMORPHISM CORE)
+// ==========================================
+
+class BaseCharacter {
+    constructor(id, name, priorityTarget, usesPot = true) {
+        this.id = id;
+        this.name = name;
+        this.priority = `Ưu tiên: ${priorityTarget}`;
+        this.usesPot = usesPot;
+    }
+
+    getPOTDefinition() { return "POT"; }
+
+    calculateCommonDerived(stats, baseStat) {
+        const realHp = stats.hp * 5;
+        
+        // 1. Tính toán RES (Kháng Debuff)
+        let vit = this.id === 'healer' ? stats.pot : 0;
+        let res = stats.def + vit;
+        if (this.id === 'tanker' && stats.hp >= (baseStat * 0.4)) {
+            res = stats.def + stats.hp; 
+        }
+
+        // 2. Tính toán Lực kéo đẩy (Khả năng chống lực kéo đẩy)
+        let pushPull = stats.atk + stats.def;
+        if (this.id === 'tanker' && stats.hp >= (baseStat * 0.4)) {
+            pushPull = stats.hp + stats.atk + stats.def;
+        }
+
+        // 3. Tính toán INFL (Khả năng gây Debuff)
+        let aff = this.id === 'debuffer' ? stats.pot : 0;
+        let infl = stats.atk + aff;
+
+        // 4. Tính toán TEN (Độ bám dính của Skill)
+        let maxClassStat = Math.max(stats.atk, stats.def, stats.fort, stats.pot || 0);
+        let ten = Math.max(maxClassStat, baseStat * 0.3); 
+        
+        if (this.id === 'tanker' && stats.hp >= (baseStat * 0.4)) {
+            ten = Math.max(ten, stats.hp); 
+        }
+
+        return {
+            hpLimit: (realHp * 0.7).toFixed(1),
+            realHp: realHp,
+            carryWeight: Math.max(stats.atk, 30),
+            pushPull: pushPull,
+            moveSpeed: (stats.spd * 0.2).toFixed(1),
+            refSpeed: (stats.ref * 2 * 0.2).toFixed(1),
+            res: res,
+            infl: infl,
+            ten: ten,
+            fort: stats.fort
+        };
+    }
+
+    generateCombatInfo(stats, baseStat) {
+        const common = this.calculateCommonDerived(stats, baseStat);
+        let infoHTML = '';
+        
+        infoHTML += `<li><strong>Lượng HP hồi tối đa mỗi turn (Ngoại trừ Lifesteal):</strong> <span>${common.hpLimit}</span> (70% của ${common.realHp} HP)</li>`;
+        infoHTML += `<li><strong>Sức mang vác:</strong> <span>${common.carryWeight} kg</span> (Max của ATK hoặc 30)</li>`;
+        
+        let pushPullText = `(ATK + DEF)`;
+        if (this.id === 'tanker' && stats.hp >= (baseStat * 0.4)) {
+            pushPullText = `(100% HP gốc + ATK + DEF)`; // Hidden mechanic
+        }
+        infoHTML += `<li><strong>Khả năng chống lực kéo đẩy:</strong> <span>${common.pushPull}</span> ${pushPullText}</li>`;
+        
+        infoHTML += `<li><strong>Tốc độ di chuyển:</strong> <span>${common.moveSpeed} m/s</span></li>`;
+        infoHTML += `<li><strong>Tốc độ phản xạ:</strong> <span>${common.refSpeed} m/s</span></li>`;
+        
+        let resText = this.id === 'healer' ? `(DEF + POT[VIT])` : `(DEF)`;
+        if (this.id === 'tanker' && stats.hp >= (baseStat * 0.4)) {
+            resText = `(DEF + 100% HP gốc)`; // Hidden mechanic
+        }
+        infoHTML += `<li><strong>Kháng debuff (RES):</strong> <span>${common.res}</span> ${resText}</li>`;
+        
+        if (common.fort > 0) {
+            infoHTML += `<li><strong>Khả năng chặn debuff của Khiên:</strong> <span>${common.fort}</span> (100% FORT)</li>`;
+        }
+
+        let inflText = this.id === 'debuffer' ? `(ATK + POT[AFF])` : `(ATK)`;
+        infoHTML += `<li><strong>Khả năng gây debuff (INFL):</strong> <span>${common.infl}</span> ${inflText}</li>`;
+
+        let tenText = `(Max của Class Stat cao nhất hoặc 30% Base)`;
+        if (this.id === 'tanker' && stats.hp >= (baseStat * 0.4)) {
+            tenText = `(100% HP gốc, Class Stat max, hoặc 30% Base)`; // Hidden mechanic
+        }
+        infoHTML += `<li><strong>Độ bám dính của Skill (TEN):</strong> <span>${common.ten} Ten</span> ${tenText}</li>`;
+
+        return { common, infoHTML };
+    }
+}
+
+// --- KHAI BÁO CÁC CLASS CỤ THỂ ---
+
+class Attacker extends BaseCharacter {
+    constructor() { super('attacker', 'Attacker', 'ATK', false); } 
+    getPOTDefinition() { return "Không sử dụng"; }
+    generateCombatInfo(stats, baseStat) {
+        return super.generateCombatInfo(stats, baseStat).infoHTML; 
+    }
+}
+
+class Tanker extends BaseCharacter {
+    constructor() { super('tanker', 'Tanker', 'HP / DEF / FORT', false); } 
+    getPOTDefinition() { return "Không sử dụng"; }
+    generateCombatInfo(stats, baseStat) {
+        return super.generateCombatInfo(stats, baseStat).infoHTML; 
+    }
+}
+
+class Healer extends BaseCharacter {
+    constructor() { super('healer', 'Healer', 'POT (VIT)', true); }
+    getPOTDefinition() { return "POT (VIT)"; }
+    generateCombatInfo(stats, baseStat) {
+        return super.generateCombatInfo(stats, baseStat).infoHTML; 
+    }
+}
+
+class Supporter extends BaseCharacter {
+    constructor() { super('supporter', 'Supporter', 'POT (AST)', true); } 
+    getPOTDefinition() { return "POT (AST)"; }
+    generateCombatInfo(stats, baseStat) {
+        return super.generateCombatInfo(stats, baseStat).infoHTML; 
+    }
+}
+
+class Debuffer extends BaseCharacter {
+    constructor() { super('debuffer', 'Debuffer', 'ATK / POT (AFF)', true); }
+    getPOTDefinition() { return "POT (AFF)"; }
+    generateCombatInfo(stats, baseStat) {
+        return super.generateCombatInfo(stats, baseStat).infoHTML;
+    }
+}
+
+class Scouter extends BaseCharacter {
+    constructor() { super('scouter', 'Scouter', 'SPD / POT (INS)', true); }
+    getPOTDefinition() { return "POT (INS)"; }
+    generateCombatInfo(stats, baseStat) {
+        let { infoHTML } = super.generateCombatInfo(stats, baseStat);
+        infoHTML += `<li><strong>Tầm nhìn & Insight:</strong> <span>${stats.pot}</span> (Dựa trên INS)</li>`;
+        infoHTML += `<li><strong>Khả năng ẩn thân:</strong> <span>${Math.floor(stats.pot * 0.5 + stats.spd * 0.5)}</span> (50% INS + 50% SPD)</li>`;
+        infoHTML += `<li><strong>Khả năng phản trinh sát:</strong> <span>${stats.pot * 0.8}</span> (80% INS)</li>`;
+        return infoHTML;
+    }
+}
+
+class Summoner extends BaseCharacter {
+    constructor() { super('summoner', 'Summoner', 'POT (MAN)', true); }
+    getPOTDefinition() { return "POT (MAN)"; }
+    generateCombatInfo(stats, baseStat) {
+        return super.generateCombatInfo(stats, baseStat).infoHTML; 
+    }
+}
+
+// Registry quản lý Classes
+const CharacterSystem = {
+    attacker: new Attacker(), tanker: new Tanker(), healer: new Healer(),
+    supporter: new Supporter(), debuffer: new Debuffer(), scouter: new Scouter(), summoner: new Summoner()
 };
 
+// ==========================================
+// LOGIC TÍNH TOÁN & VALIDATE
+// ==========================================
 class StatCalculator {
-    constructor() { this.statNames = ['hp', 'spd', 'ref', 'atk', 'def', 'fort', 'ifl', 'ast', 'man', 'vit']; }
+    constructor() { this.statNames = ['hp', 'spd', 'ref', 'atk', 'def', 'fort', 'pot']; }
     getRequirements(baseStat) {
-        return {
-            hp: Math.ceil(baseStat * 0.20),
-            spd: Math.ceil(baseStat * 0.10),
-            ref: Math.ceil(baseStat * 0.10)
-        };
+        return { hp: Math.ceil(baseStat * 0.20), spd: Math.ceil(baseStat * 0.10), ref: Math.ceil(baseStat * 0.10) };
     }
     calculateTotalUsed(stats) { return this.statNames.reduce((total, stat) => total + (stats[stat] || 0), 0); }
     validate(stats, baseStat) {
@@ -33,29 +186,26 @@ class StatCalculator {
     }
 }
 
+// ==========================================
+// UI CONTROLLER
+// ==========================================
 class UIController {
     constructor() {
-        this.inputs = {};
-        this.outputs = {};
-        this.outputRows = {};
+        this.inputs = {}; this.outputs = {}; this.outputRows = {};
         this.DOM = {
-            charClass: document.getElementById('charClass'),
-            baseStat: document.getElementById('baseStat'),
-            resClassName: document.getElementById('res-class-name'),
-            resPriority: document.getElementById('res-priority'),
-            resBase: document.getElementById('res-base'),
-            resRemaining: document.getElementById('res-remaining'),
-            remainingBox: document.getElementById('remaining-box'),
-            combatInfo: document.getElementById('combat-info')
+            charClass: document.getElementById('charClass'), baseStat: document.getElementById('baseStat'),
+            resClassName: document.getElementById('res-class-name'), resPriority: document.getElementById('res-priority'),
+            resBase: document.getElementById('res-base'), resRemaining: document.getElementById('res-remaining'),
+            remainingBox: document.getElementById('remaining-box'), combatInfo: document.getElementById('combat-info'),
+            labelPot: document.getElementById('label-pot')
         };
         this.initElements();
     }
 
     initElements() {
-        for (const key in CharacterClasses) {
+        for (const key in CharacterSystem) {
             const option = document.createElement('option');
-            option.value = key;
-            option.textContent = CharacterClasses[key].name;
+            option.value = key; option.textContent = CharacterSystem[key].name;
             this.DOM.charClass.appendChild(option);
         }
         document.querySelectorAll('.stat-input').forEach(input => {
@@ -69,19 +219,13 @@ class UIController {
     getFormData() {
         const stats = {};
         for (const key in this.inputs) { stats[key] = parseInt(this.inputs[key].value) || 0; }
-        return {
-            charClass: this.DOM.charClass.value,
-            baseStat: parseInt(this.DOM.baseStat.value) || 0,
-            stats: stats
-        };
+        return { charClass: this.DOM.charClass.value, baseStat: parseInt(this.DOM.baseStat.value) || 0, stats: stats };
     }
 
     setFormData(data) {
         this.DOM.charClass.value = data.charClass;
         this.DOM.baseStat.value = data.baseStat;
-        for (const key in data.stats) {
-            if (this.inputs[key]) this.inputs[key].value = data.stats[key] || '';
-        }
+        for (const key in data.stats) { if (this.inputs[key]) this.inputs[key].value = data.stats[key] || ''; }
     }
 
     bindEvents(callback) {
@@ -91,14 +235,26 @@ class UIController {
     }
 
     render(data, remaining, errors, requirements) {
-        const currentClass = CharacterClasses[data.charClass];
-        this.DOM.resClassName.textContent = currentClass.name;
-        this.DOM.resPriority.textContent = currentClass.priority;
+        const activeClass = CharacterSystem[data.charClass];
+
+        this.DOM.resClassName.textContent = activeClass.name;
+        this.DOM.resPriority.textContent = activeClass.priority;
         this.DOM.resBase.textContent = data.baseStat;
         this.DOM.resRemaining.textContent = remaining;
 
         if (remaining < 0) this.DOM.remainingBox.classList.add('error-box');
         else this.DOM.remainingBox.classList.remove('error-box');
+
+        const potGroup = this.DOM.labelPot.closest('.form-group');
+        const outPotRow = this.outputRows['pot'];
+        if (!activeClass.usesPot) {
+            potGroup.style.display = 'none';
+            outPotRow.style.display = 'none';
+            data.stats.pot = 0; 
+        } else {
+            potGroup.style.display = 'flex';
+        }
+        this.DOM.labelPot.textContent = activeClass.getPOTDefinition();
 
         document.getElementById('label-hp').textContent = `HP (Min ${requirements.hp}):`;
         document.getElementById('label-spd').textContent = `SPD (Min ${requirements.spd}):`;
@@ -114,126 +270,73 @@ class UIController {
             this.inputs[key].classList.add('input-error');
         }
 
-        // 1. Render Basic Stats & Ẩn stat = 0
         for (const key in data.stats) {
             let statValue = data.stats[key];
             if (key === 'hp') this.outputs[key].textContent = statValue * 5;
             else this.outputs[key].textContent = statValue;
             
-            if (statValue === 0) this.outputRows[key].style.display = 'none';
-            else this.outputRows[key].style.display = 'flex';
+            if (key !== 'pot' || activeClass.usesPot) {
+                if (statValue === 0) this.outputRows[key].style.display = 'none';
+                else this.outputRows[key].style.display = 'flex';
+            }
         }
 
-        // 2. Tính toán Derived Stats
-        const stats = data.stats;
-        let maxVal = 0, maxName = '';
-        for (const [k, v] of Object.entries(stats)) {
-            if (v > maxVal) { maxVal = v; maxName = k.toUpperCase(); }
-        }
-
-        const realHp = stats.hp * 5;
-        const hpLimit = (realHp * 0.7).toFixed(1);
-        const carryWeight = Math.max(stats.atk, 30);
-        const pushPull = stats.atk + stats.def;
-        const moveSpeed = (stats.spd * 0.2).toFixed(1);
-        const refSpeed = (stats.ref * 2 * 0.2).toFixed(1);
-        const res = stats.def + stats.vit;
-        const atkAst = stats.atk + stats.ast;
-        const inflVal = Math.max(atkAst, maxVal);
-        const inflText = (inflVal === atkAst && atkAst > maxVal) ? "100% ATK + 100% AST" : `100% ${maxName}`;
-
-        // 3. Render Derived Stats HTML
-        let combatHTML = `<ul class="combat-list">`;
-        combatHTML += `<li><strong>Giới hạn HP + Fake HP/turn:</strong> <span>${hpLimit}</span> (70% của ${realHp} HP)</li>`;
-        combatHTML += `<li><strong>Sức mang vác tối đa:</strong> <span>${carryWeight} kg</span></li>`;
-        combatHTML += `<li><strong>Sức chịu lực kéo/đẩy max:</strong> <span>${pushPull}</span> (ATK + DEF)</li>`;
-        combatHTML += `<li><strong>Tốc độ di chuyển max:</strong> <span>${moveSpeed} m/s</span></li>`;
-        combatHTML += `<li><strong>Phản xạ với đối tượng max:</strong> <span>${refSpeed} m/s</span></li>`;
-        if (stats.ifl > 0) combatHTML += `<li><strong>Trinh sát & Chống trinh sát:</strong> <span>${stats.ifl}</span> (100% IFL)</li>`;
-        combatHTML += `<li><strong>Chống Debuff (RES):</strong> <span>${res}</span> (DEF + VIT)</li>`;
-        combatHTML += `<li><strong>Độ mạnh Skill (POT):</strong> <span>${maxVal}</span> (100% ${maxName} - Stat cao nhất)</li>`;
-        combatHTML += `<li><strong>Độ xuyên Skill (INFL):</strong> <span>${inflVal}</span> (${inflText})</li>`;
-        combatHTML += `<li><strong>Độ bám dính Skill (TEN):</strong> <span>${maxVal}</span> (100% ${maxName} - Stat cao nhất)</li>`;
-        combatHTML += `</ul>`;
-        this.DOM.combatInfo.innerHTML = combatHTML;
+        this.DOM.combatInfo.innerHTML = `<ul class="combat-list">${activeClass.generateCombatInfo(data.stats, data.baseStat)}</ul>`;
     }
 }
 
+// ==========================================
+// APP CORE
+// ==========================================
 class App {
     constructor(storage, calculator, ui) {
-        this.storage = storage;
-        this.calculator = calculator;
-        this.ui = ui;
+        this.storage = storage; this.calculator = calculator; this.ui = ui;
         this.defaultData = {
             charClass: 'attacker', baseStat: 300,
-            stats: { hp: 60, spd: 30, ref: 30, atk: 0, def: 0, fort: 0, ifl: 0, ast: 0, man: 0, vit: 0 }
+            stats: { hp: 60, spd: 30, ref: 30, atk: 0, def: 0, fort: 0, pot: 0 }
         };
         this.init();
     }
 
     init() {
         const savedData = this.storage.load();
+        if(savedData && savedData.stats && savedData.stats.pot === undefined) savedData.stats.pot = 0;
+        
         this.ui.setFormData(savedData || this.defaultData);
         this.ui.bindEvents(() => this.process());
-        this.bindButtons(); // Gắn sự kiện cho các nút
-        this.process();
-    }
-
-    bindButtons() {
-        // Xử lý nút Clear
+        
         document.getElementById('btn-clear').addEventListener('click', () => {
-            if(confirm('Bạn có chắc chắn muốn xóa toàn bộ số liệu và làm mới lại từ đầu không?')) {
+            if(confirm('Bạn có muốn làm mới toàn bộ chỉ số không?')) {
                 this.storage.save(this.defaultData);
                 this.ui.setFormData(this.defaultData);
                 this.process();
             }
         });
 
-        // Xử lý nút Copy
         document.getElementById('btn-copy').addEventListener('click', () => {
-            this.copyToClipboard();
-        });
-    }
-
-    copyToClipboard() {
-        const className = document.getElementById('res-class-name').innerText;
-        const priority = document.getElementById('res-priority').innerText;
-        const base = document.getElementById('res-base').innerText;
-        const remaining = document.getElementById('res-remaining').innerText;
-        
-        let text = `=== KẾT QUẢ BUILD STAT ===\n`;
-        text += `Class: ${className} (${priority})\n`;
-        text += `Base Stat: ${base} | Remaining: ${remaining}\n\n`;
-        
-        text += `[ CHỈ SỐ CƠ BẢN ]\n`;
-        document.querySelectorAll('.stat-row').forEach(row => {
-            if(row.style.display !== 'none') {
-                const label = row.querySelector('span').innerText;
-                const val = row.querySelector('strong').innerText;
-                text += `- ${label} ${val}\n`;
-            }
-        });
-
-        text += `\n[ THÔNG TIN CHIẾN ĐẤU ]\n`;
-        document.querySelectorAll('#combat-info li').forEach(li => {
-            // Loại bỏ khoảng trắng thừa và nối dòng
-            const cleanText = li.innerText.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
-            text += `- ${cleanText}\n`;
-        });
-
-        // Ghi vào Clipboard
-        navigator.clipboard.writeText(text).then(() => {
-            const btn = document.getElementById('btn-copy');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '✅ Đã Copy!';
-            btn.classList.add('btn-success');
+            const className = document.getElementById('res-class-name').innerText;
+            const priority = document.getElementById('res-priority').innerText;
+            const base = document.getElementById('res-base').innerText;
+            const remaining = document.getElementById('res-remaining').innerText;
             
-            // Trả lại nút như cũ sau 2 giây
-            setTimeout(() => {
-                btn.innerHTML = originalText;
-                btn.classList.remove('btn-success');
-            }, 2000);
-        }).catch(err => alert('Không thể copy. Trình duyệt của bạn có thể chặn tính năng này!'));
+            let text = `=== KẾT QUẢ BUILD STAT ===\nClass: ${className} (${priority})\nBase Stat: ${base} | Remaining: ${remaining}\n\n[ CHỈ SỐ CƠ BẢN ]\n`;
+            document.querySelectorAll('.stat-row').forEach(row => {
+                if(row.style.display !== 'none') text += `- ${row.querySelector('span').innerText} ${row.querySelector('strong').innerText}\n`;
+            });
+
+            text += `\n[ THÔNG TIN CHIẾN ĐẤU ]\n`;
+            document.querySelectorAll('#combat-info li').forEach(li => {
+                text += `- ${li.innerText.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim()}\n`;
+            });
+
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('btn-copy');
+                btn.innerHTML = '✅ Đã Copy!'; btn.classList.add('btn-success');
+                setTimeout(() => { btn.innerHTML = '📋 Copy Kết Quả'; btn.classList.remove('btn-success'); }, 2000);
+            });
+        });
+
+        this.process(); 
     }
 
     process() {
@@ -249,5 +352,5 @@ class App {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    new App(new StorageService('characterBuildStats'), new StatCalculator(), new UIController());
+    new App(new StorageService('characterBuildStats_vHiddenMechanic'), new StatCalculator(), new UIController());
 });
