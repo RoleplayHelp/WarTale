@@ -64,19 +64,20 @@ class BaseCharacter {
         const common = this.calculateCommonDerived(stats, baseStat);
         let infoHTML = '';
         
-        infoHTML += `<li><strong>Lượng HP hồi tối đa mỗi turn (Ngoại trừ Lifesteal):</strong> <span>${common.hpLimit}</span></li>`;
+        infoHTML += `<li><strong>Lượng HP hồi tối đa mỗi turn (Ngoại trừ Lifesteal):</strong> <span>${common.hpLimit} HP</span></li>`;
         infoHTML += `<li><strong>Sức mang vác:</strong> <span>${common.carryWeight} kg</span></li>`;
-        infoHTML += `<li><strong>Khả năng chống lực kéo đẩy:</strong> <span>${common.pushPull}</span></li>`;
+        infoHTML += `<li><strong>Khả năng chống lực kéo đẩy:</strong> <span>${common.pushPull} kg (Atk)</span></li>`;
         infoHTML += `<li><strong>Tốc độ di chuyển:</strong> <span>${common.moveSpeed} m/s</span></li>`;
         infoHTML += `<li><strong>Tốc độ phản xạ:</strong> <span>${common.refSpeed} m/s</span></li>`;
-        infoHTML += `<li><strong>Kháng debuff (RES):</strong> <span>${common.res}</span></li>`;
+        infoHTML += `<li><strong>Kháng debuff (RES):</strong> <span>${common.res} Res</span></li>`;
         
         if (common.fort > 0) {
             infoHTML += `<li><strong>Khả năng chặn debuff của Khiên:</strong> <span>${common.fort}</span></li>`;
         }
 
         if (this.id === 'attacker' || this.id === 'debuffer') {
-            infoHTML += `<li><strong>Khả năng gây debuff (INFL):</strong> <span>${common.infl}</span></li>`;
+            const unit = this.id === 'debuffer' ? 'Infl' : '';
+            infoHTML += `<li><strong>Khả năng gây debuff (INFL):</strong> <span>${common.infl} ${unit}</span></li>`;
         }
 
         infoHTML += `<li><strong>Độ bám dính của Skill (TEN):</strong> <span>${common.ten} Ten</span></li>`;
@@ -132,8 +133,8 @@ class Scouter extends BaseCharacter {
     getPOTDefinition() { return "POT (INS)"; }
     generateCombatInfo(stats, baseStat) {
         let { infoHTML } = super.generateCombatInfo(stats, baseStat);
-        infoHTML += `<li><strong>Khả năng trinh sát:</strong> <span>${stats.pot}</span></li>`;
-        infoHTML += `<li><strong>Khả năng phản trinh sát:</strong> <span>${stats.pot * 0.8}</span></li>`;
+        infoHTML += `<li><strong>Khả năng trinh sát:</strong> <span>${stats.pot} Ins</span></li>`;
+        infoHTML += `<li><strong>Khả năng phản trinh sát:</strong> <span>${(stats.pot * 0.8).toFixed(1)} Ins</span></li>`;
         return infoHTML;
     }
 }
@@ -146,7 +147,6 @@ class Summoner extends BaseCharacter {
     }
 }
 
-// Registry quản lý Classes
 const CharacterSystem = {
     attacker: new Attacker(), tanker: new Tanker(), healer: new Healer(),
     supporter: new Supporter(), debuffer: new Debuffer(), scouter: new Scouter(), summoner: new Summoner()
@@ -299,7 +299,6 @@ class App {
         });
 
         document.getElementById('btn-copy').addEventListener('click', () => {
-            // Thay đổi sang textContent để không bị CSS bóp méo thành in hoa
             const className = document.getElementById('res-class-name').textContent;
             const priority = document.getElementById('res-priority').textContent;
             const base = document.getElementById('res-base').textContent;
@@ -308,14 +307,12 @@ class App {
             let text = `=== KẾT QUẢ BUILD STAT ===\nClass: ${className} (${priority})\nBase Stat: ${base} | Remaining: ${remaining}\n\n[ CHỈ SỐ CƠ BẢN ]\n`;
             document.querySelectorAll('.stat-row').forEach(row => {
                 if(row.style.display !== 'none') {
-                    // Dùng textContent thay vì innerText
                     text += `- ${row.querySelector('span').textContent} ${row.querySelector('strong').textContent}\n`;
                 }
             });
 
             text += `\n[ THÔNG TIN CHIẾN ĐẤU ]\n`;
             document.querySelectorAll('#combat-info li').forEach(li => {
-                // Dùng textContent thay vì innerText
                 text += `- ${li.textContent.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim()}\n`;
             });
 
@@ -342,5 +339,5 @@ class App {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    new App(new StorageService('characterBuildStats_vFinal_Clean'), new StatCalculator(), new UIController());
+    new App(new StorageService('characterBuildStats_vProduction'), new StatCalculator(), new UIController());
 });
