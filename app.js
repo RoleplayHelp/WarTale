@@ -86,8 +86,11 @@ class BaseCharacter {
             infoHTML += `<li><strong>Khả năng chặn debuff của Khiên:</strong> <span>${common.fort}</span> (100% FORT)</li>`;
         }
 
-        let inflText = this.id === 'debuffer' ? `(ATK + POT[AFF])` : `(ATK)`;
-        infoHTML += `<li><strong>Khả năng gây debuff (INFL):</strong> <span>${common.infl}</span> ${inflText}</li>`;
+        // Render INFL - Chỉ dành cho Attacker và Debuffer
+        if (this.id === 'attacker' || this.id === 'debuffer') {
+            let inflText = this.id === 'debuffer' ? `(ATK + POT[AFF])` : `(ATK)`;
+            infoHTML += `<li><strong>Khả năng gây debuff (INFL):</strong> <span>${common.infl}</span> ${inflText}</li>`;
+        }
 
         let tenText = `(Max của Class Stat cao nhất hoặc 30% Base)`;
         if (this.id === 'tanker' && stats.hp >= (baseStat * 0.4)) {
@@ -146,8 +149,7 @@ class Scouter extends BaseCharacter {
     getPOTDefinition() { return "POT (INS)"; }
     generateCombatInfo(stats, baseStat) {
         let { infoHTML } = super.generateCombatInfo(stats, baseStat);
-        infoHTML += `<li><strong>Tầm nhìn & Insight:</strong> <span>${stats.pot}</span> (Dựa trên INS)</li>`;
-        infoHTML += `<li><strong>Khả năng ẩn thân:</strong> <span>${Math.floor(stats.pot * 0.5 + stats.spd * 0.5)}</span> (50% INS + 50% SPD)</li>`;
+        infoHTML += `<li><strong>Khả năng trinh sát:</strong> <span>${stats.pot}</span> (Dựa trên INS)</li>`;
         infoHTML += `<li><strong>Khả năng phản trinh sát:</strong> <span>${stats.pot * 0.8}</span> (80% INS)</li>`;
         return infoHTML;
     }
@@ -352,5 +354,5 @@ class App {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    new App(new StorageService('characterBuildStats_vHiddenMechanic'), new StatCalculator(), new UIController());
+    new App(new StorageService('characterBuildStats_vFinal3'), new StatCalculator(), new UIController());
 });
