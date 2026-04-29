@@ -321,7 +321,7 @@ class App {
             const base = document.getElementById('res-base').innerText;
             const remaining = document.getElementById('res-remaining').innerText;
             
-            let text = `=== KẾT QUẢ BUILD STAT ===\nClass: ${className} (${priority})\nBase Stat: ${base} | Remaining: ${remaining}\n\n[ CHỈ SỐ CƠ BẢN ]\n`;
+            let text = `=== KẾT QUẢ BUILD STAT ===\nClass: ${className} \nBase Stat: ${base} | Remaining: ${remaining}\n\n[ CHỈ SỐ CƠ BẢN ]\n`;
             document.querySelectorAll('.stat-row').forEach(row => {
                 if(row.style.display !== 'none') text += `- ${row.querySelector('span').innerText} ${row.querySelector('strong').innerText}\n`;
             });
