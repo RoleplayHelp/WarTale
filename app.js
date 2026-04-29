@@ -64,39 +64,22 @@ class BaseCharacter {
         const common = this.calculateCommonDerived(stats, baseStat);
         let infoHTML = '';
         
-        infoHTML += `<li><strong>Lượng HP hồi tối đa mỗi turn (Ngoại trừ Lifesteal):</strong> <span>${common.hpLimit}</span> (70% của ${common.realHp} HP)</li>`;
-        infoHTML += `<li><strong>Sức mang vác:</strong> <span>${common.carryWeight} kg</span> (Max của ATK hoặc 30)</li>`;
-        
-        let pushPullText = `(ATK + DEF)`;
-        if (this.id === 'tanker' && stats.hp >= (baseStat * 0.4)) {
-            pushPullText = `(100% HP gốc + ATK + DEF)`; // Hidden mechanic
-        }
-        infoHTML += `<li><strong>Khả năng chống lực kéo đẩy:</strong> <span>${common.pushPull}</span> ${pushPullText}</li>`;
-        
+        infoHTML += `<li><strong>Lượng HP hồi tối đa mỗi turn (Ngoại trừ Lifesteal):</strong> <span>${common.hpLimit}</span></li>`;
+        infoHTML += `<li><strong>Sức mang vác:</strong> <span>${common.carryWeight} kg</span></li>`;
+        infoHTML += `<li><strong>Khả năng chống lực kéo đẩy:</strong> <span>${common.pushPull}</span></li>`;
         infoHTML += `<li><strong>Tốc độ di chuyển:</strong> <span>${common.moveSpeed} m/s</span></li>`;
         infoHTML += `<li><strong>Tốc độ phản xạ:</strong> <span>${common.refSpeed} m/s</span></li>`;
-        
-        let resText = this.id === 'healer' ? `(DEF + POT[VIT])` : `(DEF)`;
-        if (this.id === 'tanker' && stats.hp >= (baseStat * 0.4)) {
-            resText = `(DEF + 100% HP gốc)`; // Hidden mechanic
-        }
-        infoHTML += `<li><strong>Kháng debuff (RES):</strong> <span>${common.res}</span> ${resText}</li>`;
+        infoHTML += `<li><strong>Kháng debuff (RES):</strong> <span>${common.res}</span></li>`;
         
         if (common.fort > 0) {
-            infoHTML += `<li><strong>Khả năng chặn debuff của Khiên:</strong> <span>${common.fort}</span> (100% FORT)</li>`;
+            infoHTML += `<li><strong>Khả năng chặn debuff của Khiên:</strong> <span>${common.fort}</span></li>`;
         }
 
-        // Render INFL - Chỉ dành cho Attacker và Debuffer
         if (this.id === 'attacker' || this.id === 'debuffer') {
-            let inflText = this.id === 'debuffer' ? `(ATK + POT[AFF])` : `(ATK)`;
-            infoHTML += `<li><strong>Khả năng gây debuff (INFL):</strong> <span>${common.infl}</span> ${inflText}</li>`;
+            infoHTML += `<li><strong>Khả năng gây debuff (INFL):</strong> <span>${common.infl}</span></li>`;
         }
 
-        let tenText = `(Max của Class Stat cao nhất hoặc 30% Base)`;
-        if (this.id === 'tanker' && stats.hp >= (baseStat * 0.4)) {
-            tenText = `(100% HP gốc, Class Stat max, hoặc 30% Base)`; // Hidden mechanic
-        }
-        infoHTML += `<li><strong>Độ bám dính của Skill (TEN):</strong> <span>${common.ten} Ten</span> ${tenText}</li>`;
+        infoHTML += `<li><strong>Độ bám dính của Skill (TEN):</strong> <span>${common.ten} Ten</span></li>`;
 
         return { common, infoHTML };
     }
@@ -149,8 +132,8 @@ class Scouter extends BaseCharacter {
     getPOTDefinition() { return "POT (INS)"; }
     generateCombatInfo(stats, baseStat) {
         let { infoHTML } = super.generateCombatInfo(stats, baseStat);
-        infoHTML += `<li><strong>Khả năng trinh sát:</strong> <span>${stats.pot}</span> (Dựa trên INS)</li>`;
-        infoHTML += `<li><strong>Khả năng phản trinh sát:</strong> <span>${stats.pot * 0.8}</span> (80% INS)</li>`;
+        infoHTML += `<li><strong>Khả năng trinh sát:</strong> <span>${stats.pot}</span></li>`;
+        infoHTML += `<li><strong>Khả năng phản trinh sát:</strong> <span>${stats.pot * 0.8}</span></li>`;
         return infoHTML;
     }
 }
@@ -316,19 +299,24 @@ class App {
         });
 
         document.getElementById('btn-copy').addEventListener('click', () => {
-            const className = document.getElementById('res-class-name').innerText;
-            const priority = document.getElementById('res-priority').innerText;
-            const base = document.getElementById('res-base').innerText;
-            const remaining = document.getElementById('res-remaining').innerText;
+            // Thay đổi sang textContent để không bị CSS bóp méo thành in hoa
+            const className = document.getElementById('res-class-name').textContent;
+            const priority = document.getElementById('res-priority').textContent;
+            const base = document.getElementById('res-base').textContent;
+            const remaining = document.getElementById('res-remaining').textContent;
             
-            let text = `=== THÔNG TIN NHÂN VẬT ===\nClass: ${className} \nBase Stat: ${base} | Remaining: ${remaining}\n\n[ CHỈ SỐ CƠ BẢN ]\n`;
+            let text = `=== KẾT QUẢ BUILD STAT ===\nClass: ${className} (${priority})\nBase Stat: ${base} | Remaining: ${remaining}\n\n[ CHỈ SỐ CƠ BẢN ]\n`;
             document.querySelectorAll('.stat-row').forEach(row => {
-                if(row.style.display !== 'none') text += `- ${row.querySelector('span').innerText} ${row.querySelector('strong').innerText}\n`;
+                if(row.style.display !== 'none') {
+                    // Dùng textContent thay vì innerText
+                    text += `- ${row.querySelector('span').textContent} ${row.querySelector('strong').textContent}\n`;
+                }
             });
 
             text += `\n[ THÔNG TIN CHIẾN ĐẤU ]\n`;
             document.querySelectorAll('#combat-info li').forEach(li => {
-                text += `- ${li.innerText.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim()}\n`;
+                // Dùng textContent thay vì innerText
+                text += `- ${li.textContent.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim()}\n`;
             });
 
             navigator.clipboard.writeText(text).then(() => {
@@ -354,5 +342,5 @@ class App {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    new App(new StorageService('characterBuildStats_vFinal3'), new StatCalculator(), new UIController());
+    new App(new StorageService('characterBuildStats_vFinal_Clean'), new StatCalculator(), new UIController());
 });
